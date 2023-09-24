@@ -2,6 +2,7 @@
 
 - **Command-Line Rust** by Ken Youens-Clark: https://www.oreilly.com/library/view/command-line-rust/9781098109424/ 
 - **Crust of Rust** by Jon Gjengset: https://www.youtube.com/playlist?list=PLqbS7AVVErFiWDOAVrPt7aYmnuuOLYvOa
+- **The Little Book of Rust Macros**: https://github.com/veykril/tlborm
 
 ## `str` vs `&str` vs `String`
 
@@ -14,3 +15,14 @@ If I have a `String`, going to a `&str` is trivial, it's cheap(AsRef).
 Going the other way is harder, `&str -> String`, it's expensive(memcpy).
 
 ref: https://www.youtube.com/watch?v=rAl-9HwD858&list=PLqbS7AVVErFiWDOAVrPt7aYmnuuOLYvOa&index=2
+
+## cheat for compile fail test
+
+```rs
+/// ```compile_fail
+/// let x: Vec<u32> = vecmac::avec![42; "foo"];
+/// ```
+#[allow(dead_code)]
+struct CompileFailTest;
+```
+ref: https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#attributes
