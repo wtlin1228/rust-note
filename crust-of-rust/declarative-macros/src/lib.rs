@@ -1,21 +1,34 @@
 #[macro_export]
 macro_rules! avec {
-    ($($element:expr),* $(,)?) => {{
+    ($($element:expr),*) => {{
+        // check that count is const
+        const C: usize = ($crate::count![@COUNT; $($element),*]);
+
         #[allow(unused_mut)]
-        let mut vs = Vec::new();
-        $(
-            vs.push($element);
-        )*
+        let mut vs = Vec::with_capacity(C); // to avoid allocating more space
+        $(vs.push($element);)*
         vs
+    }};
+    ($($element:expr,)*) => {{
+        $crate::avec![$($element),*]
     }};
     ($element:expr; $count:expr) => {{
-        let mut vs = Vec::new();
-        let x = $element;
-        for _ in 0..$count {
-            vs.push(x.clone());
-        }
+        let count = $count;
+        let mut vs = Vec::with_capacity(count); // to avoid allocating more space
+        vs.resize(count, $element);
+        // vs.extend(::std::iter::repeat($element).take(count));
         vs
     }};
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! count {
+    (@COUNT; $($element:expr),* ) => {
+        // use Slice's len method to get the length of reference of this Vec
+        <[()]>::len(&[$($crate::count![@SUBST; $element]),*])
+    };
+    (@SUBST; $_element:expr) => { () };
 }
 
 #[test]
