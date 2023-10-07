@@ -26,3 +26,52 @@ ref: https://www.youtube.com/watch?v=rAl-9HwD858&list=PLqbS7AVVErFiWDOAVrPt7aYmn
 struct CompileFailTest;
 ```
 ref: https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#attributes
+
+## iterators
+
+High level overview
+
+```rs
+fn main() {
+    let mut iter = vec!["a", "b", "c"].into_iter();
+    while let Some(e) = iter.next() {}
+}
+```
+
+### why not generic?
+
+Use a associated type make it easier to use a iterator because we don't have to specify the type for iterator.
+
+```rs
+// prefer this
+trait Iterator {
+    type Item;
+    fn next(&mut self) -> Option<Self::Item>;
+}
+
+// don't prefer this
+trait Iterator<Item> {
+    fn next(&mut self) -> Option<Item>;
+}
+```
+
+### iterator only do borrowing
+
+```rs
+fn main() {
+    let vs = vec![1, 2, 3];
+    for v in vs {
+        // consumes vs, owned v
+    }
+    for v in vs.iter() {
+        // borrows vs, & to v
+    }
+    for v in &vs {
+        // equivalent to vs.iter()
+    }
+}
+```
+
+### flatten
+
+![flatten](./images/flatten.png)
