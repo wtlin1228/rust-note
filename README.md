@@ -4,7 +4,7 @@
 - **Crust of Rust** by Jon Gjengset: https://www.youtube.com/playlist?list=PLqbS7AVVErFiWDOAVrPt7aYmnuuOLYvOa
 - **The Little Book of Rust Macros**: https://github.com/veykril/tlborm
 
-## `str` vs `&str` vs `String`
+### `str` vs `&str` vs `String`
 
 - `str -> [char]`, `str` is a sequence of chars, it doesn't know the size.
 - `&str -> &[char]`, `&str` is a reference to a sequence of chars, so it knows both the start and the size of that char sequence.
@@ -22,7 +22,7 @@ Performance Hint
 
 All the inputs and outputs are in ASCII. Rust `String`s and `&str` are utf8, so while one might expect `"Hello".chars()` to be simple, it actually has to check each char to see if it's 1, 2, 3 or 4 `u8`s long. If we know a `&str` is ASCII then we can call .`as_bytes()` and refer to the underlying data as a `&[u8]` (byte slice). Iterating over a slice of ASCII bytes is much quicker as there are no codepoints involved - every ASCII byte is one `u8` long.
 
-## cheat for compile fail test
+### cheat for compile fail test
 
 ```rs
 /// ```compile_fail
@@ -33,7 +33,7 @@ struct CompileFailTest;
 ```
 ref: https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#attributes
 
-## iterators
+### iterators
 
 High level overview
 
@@ -82,3 +82,7 @@ fn main() {
 
 ![flatten](./images/flatten.png)
 
+### scoped threads can borrow non-`'static` data
+
+- [Function std::thread::scope](https://doc.rust-lang.org/std/thread/fn.scope.html)
+- [parallel letter frequency](./exercism/parallel-letter-frequency/)
