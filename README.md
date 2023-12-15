@@ -16,6 +16,19 @@ Going the other way is harder, `&str -> String`, it's expensive(memcpy).
 
 ref: https://www.youtube.com/watch?v=rAl-9HwD858&list=PLqbS7AVVErFiWDOAVrPt7aYmnuuOLYvOa&index=2
 
+### Indexing a String in ASCII
+
+Since every ASCII byte is one `u8` long, we could convert the `String` into `Vec<u8>`.
+
+```rs
+let s = "hello world".to_string();
+let v: Vec<u8> = s.into();
+println!("{}", v[0]); // b'h'
+println!("{}", v[4]); // b'o'
+```
+
+![indexing-string](./images/indexing-string.png)
+
 ### Use `as_bytes()` to iterate slice of ASCII bytes 
 
 Performance Hint
