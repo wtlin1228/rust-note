@@ -18,6 +18,7 @@ pub struct Forth {
 type MethodTable = HashMap<String, VersionedMethod>;
 type VersionedMethod = Vec<MethodBody>;
 type MethodBody = Vec<Expression>;
+
 #[derive(Clone)]
 enum Expression {
     Load(Value),
@@ -189,14 +190,14 @@ impl Forth {
     }
 
     pub fn eval(&mut self, input: &str) -> Result<(), Error> {
-        let parser = Parser::new(input);
+        let input = input.to_lowercase();
+        let parser = Parser::new(&input);
         for parser_result in parser.into_iter() {
             let parser_result = parser_result?;
             match parser_result {
                 ParserResult::Word(LoadOrDispatch::Load(val)) => self.stack.push(val),
                 ParserResult::Word(LoadOrDispatch::Dispatch(id)) => {
-                    let id = id.to_lowercase();
-                    if let Some(versioned_method) = self.method_table.get(&id) {
+                    if let Some(versioned_method) = self.method_table.get(id) {
                         // dispatch to the latest version
                         // should be evaluated recursively and depth first
                         self.eval_dispatch(&id, versioned_method.len() - 1)?;
@@ -205,16 +206,14 @@ impl Forth {
                     }
                 }
                 ParserResult::Declaration(id, body) => {
-                    let id = id.to_lowercase();
                     let mut method_body = vec![];
                     for e in body.iter() {
                         match e {
                             LoadOrDispatch::Load(i) => method_body.push(Expression::Load(*i)),
                             LoadOrDispatch::Dispatch(id) => {
-                                let id = id.to_lowercase();
-                                if let Some(versioned_method) = self.method_table.get(&id) {
+                                if let Some(versioned_method) = self.method_table.get(*id) {
                                     method_body.push(Expression::Dispatch(
-                                        id.to_lowercase(),
+                                        id.to_string(),
                                         versioned_method.len() - 1, // dispatch to the latest version
                                     ))
                                 } else {
@@ -224,7 +223,7 @@ impl Forth {
                         }
                     }
                     self.method_table
-                        .entry(id)
+                        .entry(id.to_string())
                         .or_insert(vec![])
                         .push(method_body);
                 }
