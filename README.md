@@ -131,3 +131,7 @@ Our program doesn't know which address to jump to in order to call the trait met
 ![dynamic-dispatch](./images/dynamic-dispatch.png)
 
 A combination of a type that implements a trait and its vtable is known as a **trait object**.
+
+ref: 
+
+- [Rust for Rustaceans](https://www.amazon.com/Rust-Rustaceans-Programming-Experienced-Developers-ebook/dp/B0957SWKBS) - Chapter 2: Types, Dynamically Sized Types and Wide Pointers
