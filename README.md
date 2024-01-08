@@ -99,3 +99,35 @@ fn main() {
 
 - [Function std::thread::scope](https://doc.rust-lang.org/std/thread/fn.scope.html)
 - [parallel letter frequency](./exercism/parallel-letter-frequency/)
+
+### Static Dispatch and Dynamic Dispatch
+
+```rs
+impl String {
+    // static dispatch
+    pub fn contains(&self, p: impl Pattern) -> bool {
+        p.is_contained_in(self);
+    }
+}
+```
+
+A copy of the `String::contains` method is made for every distinct pattern type. So compiler knows which address to dispatch to. This process is called **Monomorphization**, and it's part of the reason generic Rust code usually performs as well as non-generic code.
+
+![static-dispatch](./images/static-dispatch.png)
+
+Note that **Monomorphization** also comes at a cost like slower compile time, larger program size and less effective for CPU's instruction cache. We can leaves only the type-dependent code for the compiler to copy for us while allowing the helper function to be shared.
+
+```rs
+impl String {
+    // dynamic dispatch
+    pub fn contains(&self, p: &dyn Pattern) -> bool {
+        p.is_contained_in(&*self);
+    }
+}
+```
+
+Our program doesn't know which address to jump to in order to call the trait method `is_contained_in` on the given pattern. The caller must give callee both the `address of the pattern` and the `virtual method table`.
+
+![dynamic-dispatch](./images/dynamic-dispatch.png)
+
+A combination of a type that implements a trait and its vtable is known as a **trait object**.
