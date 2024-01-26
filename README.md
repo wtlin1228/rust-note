@@ -68,11 +68,15 @@ trait Iterator {
     fn next(&mut self) -> Option<Self::Item>;
 }
 
-// don't prefer this
+// not this
 trait Iterator<Item> {
     fn next(&mut self) -> Option<Item>;
 }
 ```
+
+The advice is really just to "Use associated types whenever you can".
+
+Associated types are easier to maintain but not allow multiple implementation for the trait.
 
 ```rs
 trait Superpower {
