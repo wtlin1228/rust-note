@@ -74,6 +74,47 @@ trait Iterator<Item> {
 }
 ```
 
+```rs
+trait Superpower {
+    type Item;
+    fn dig(&self) -> Option<Self::Item>;
+}
+
+trait SuperSoda<T> {
+    fn dig(&self) -> Option<T>;
+}
+
+struct Leo;
+
+impl Superpower for Leo {
+    type Item = String;
+
+    fn dig(&self) -> Option<Self::Item> {
+        Some("Hello".to_string())
+    }
+}
+
+impl SuperSoda<String> for Leo {
+    fn dig(&self) -> Option<String> {
+        Some("Bon!".to_string())
+    }
+}
+
+impl SuperSoda<i32> for Leo {
+    fn dig(&self) -> Option<i32> {
+        Some(42)
+    }
+}
+
+fn main() {
+    let leo = Leo {};
+    println!("{:?}", Superpower::dig(&leo));
+    println!("{:?}", SuperSoda::<i32>::dig(&leo));
+    println!("{:?}", SuperSoda::<String>::dig(&leo));
+}
+
+```
+
 ### iterator only do borrowing
 
 ```rs
