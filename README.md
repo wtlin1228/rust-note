@@ -135,3 +135,64 @@ A combination of a type that implements a trait and its vtable is known as a **t
 ref: 
 
 - [Rust for Rustaceans](https://www.amazon.com/Rust-Rustaceans-Programming-Experienced-Developers-ebook/dp/B0957SWKBS) - Chapter 2: Types, Dynamically Sized Types and Wide Pointers
+
+```rs
+trait Dig {
+    fn dig_dig(&self);
+}
+
+struct A {
+    normal: u32,
+}
+
+impl Dig for A {
+    fn dig_dig(&self) {
+        println!("A dig dig {}", self.normal);
+    }
+}
+
+struct B {
+    normal: u128,
+}
+
+impl Dig for B {
+    fn dig_dig(&self) {
+        println!("B dig dig {}", self.normal);
+    }
+}
+
+// dynamic_dispatch don't need to be compiled to different instructions
+// since d is not a generic type
+fn dynamic_dispatch(d: &dyn Dig) {
+    // 8 bytes pointer to the instance that implements the Dig Trait
+    // 8 bytes pointer to the virtual method table
+    println!("{}", mem::size_of_val(&d)); // always 16 bytes
+}
+
+// static_dispatch will be compiled to different instructions
+// one for Struct A, and another one for Struct B
+// ```
+// // for Struct A
+// fn static_dispatch(d: A) {
+//     println!("{}", mem::size_of_val(&d));
+// }
+//
+// // for Struct A
+// fn static_dispatch(d: B) {
+//     println!("{}", mem::size_of_val(&d));
+// }
+// ```
+fn static_dispatch(d: impl Dig) {
+    println!("{}", mem::size_of_val(&d));
+}
+
+fn main() {
+    let a = A { normal: 0 };
+    let b = B { normal: 1 };
+    dynamic_dispatch(&a);
+    dynamic_dispatch(&b);
+    static_dispatch(a);
+    static_dispatch(b);
+}
+
+```
