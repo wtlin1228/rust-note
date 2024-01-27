@@ -241,3 +241,34 @@ fn main() {
 }
 
 ```
+
+### Ergonomic Trait Implementations
+
+Rust does not automatically implement traits for references to types that implement traits. So, providing the blanket implementations are appropriate when defining a new trait.
+
+```rust
+trait Trait {}
+
+fn foo<T: Trait>(t: T) {}
+
+struct Bar;
+
+impl Trait for Bar {}
+impl Trait for &Bar {}
+impl Trait for &mut Bar {}
+impl Trait for Box<Bar> {}
+
+fn main() {
+    let bar1 = Bar {};
+    foo(bar1);
+
+    let bar2 = Bar {};
+    foo(&bar2);
+
+    let mut bar3 = Bar {};
+    foo(&mut bar3);
+
+    let bar4 = Box::new(Bar {});
+    foo(bar4);
+}
+```
