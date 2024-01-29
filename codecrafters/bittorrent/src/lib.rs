@@ -33,7 +33,8 @@ fn decode_string(encoded_value: &[u8]) -> (&[u8], String) {
         .unwrap();
     let end_index = colon_index + 1 + string_length as usize;
     let string = str::from_utf8(&encoded_value[colon_index + 1..end_index])
-        .unwrap()
+        // Workaround: handle the invalid UTF-8 characters
+        .unwrap_or("")
         .to_string();
     (&encoded_value[end_index..], string)
 }
