@@ -30,3 +30,17 @@ fn decode_bencoded_lists() {
     );
     assert_eq!(decode_bencoded_value("lli4eei5ee"), json!([[4], 5]));
 }
+
+#[test]
+fn decode_bencoded_dictionaries() {
+    assert_eq!(
+        decode_bencoded_value("d3:foo5:apple5:helloi52ee"),
+        json!({"foo":"apple","hello":52})
+    );
+    assert_eq!(
+        decode_bencoded_value(
+            "d10:inner_dictd4:key16:value14:key2i42e8:list_keyl5:item15:item2i3eeee"
+        ),
+        json!({"inner_dict":{"key1":"value1","key2":42,"list_key":["item1","item2",3]}})
+    );
+}
