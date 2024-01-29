@@ -1,14 +1,14 @@
 use serde_json;
 
 pub fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
-    match encoded_value.chars().next().unwrap() {
-        'l' => {
+    match encoded_value.bytes().next().unwrap() {
+        b'l' => {
             return decode_array_value(encoded_value).1;
         }
-        'i' => {
+        b'i' => {
             return decode_integer_value(encoded_value).1;
         }
-        'd' => {
+        b'd' => {
             return decode_dictionary_value(encoded_value).1;
         }
         _ => {
@@ -57,19 +57,19 @@ fn decode_array_value(encoded_value: &str) -> (&str, serde_json::Value) {
     let mut encoded_value = &encoded_value[1..];
     let mut items: Vec<serde_json::Value> = vec![];
     loop {
-        match encoded_value.chars().next().unwrap() {
-            'e' => return (&encoded_value[1..], serde_json::Value::Array(items)),
-            'l' => {
+        match encoded_value.bytes().next().unwrap() {
+            b'e' => return (&encoded_value[1..], serde_json::Value::Array(items)),
+            b'l' => {
                 let res = decode_array_value(encoded_value);
                 encoded_value = res.0;
                 items.push(res.1);
             }
-            'i' => {
+            b'i' => {
                 let res = decode_integer_value(encoded_value);
                 encoded_value = res.0;
                 items.push(res.1);
             }
-            'd' => {
+            b'd' => {
                 let res = decode_dictionary_value(encoded_value);
                 encoded_value = res.0;
                 items.push(res.1);
@@ -92,26 +92,26 @@ fn decode_dictionary_value(encoded_value: &str) -> (&str, serde_json::Value) {
     loop {
         let key: String;
         let val: serde_json::Value;
-        match encoded_value.chars().next().unwrap() {
-            'e' => return (&encoded_value[1..], serde_json::Value::Object(map)),
+        match encoded_value.bytes().next().unwrap() {
+            b'e' => return (&encoded_value[1..], serde_json::Value::Object(map)),
             _ => {
                 let res = decode_string(encoded_value);
                 encoded_value = res.0;
                 key = res.1;
             }
         }
-        match encoded_value.chars().next().unwrap() {
-            'l' => {
+        match encoded_value.bytes().next().unwrap() {
+            b'l' => {
                 let res = decode_array_value(encoded_value);
                 encoded_value = res.0;
                 val = res.1;
             }
-            'i' => {
+            b'i' => {
                 let res = decode_integer_value(encoded_value);
                 encoded_value = res.0;
                 val = res.1;
             }
-            'd' => {
+            b'd' => {
                 let res = decode_dictionary_value(encoded_value);
                 encoded_value = res.0;
                 val = res.1;
