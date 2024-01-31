@@ -1,5 +1,7 @@
 use anyhow::{Context, Ok, Result};
+use serde::Serialize;
 use serde_json::json;
+use sha1::{Digest, Sha1};
 use std::collections::HashMap;
 
 const ENDING: u8 = b'e';
@@ -19,11 +21,25 @@ pub struct TorrentFile<'input> {
     pub info: TorrentFileInfo<'input>,
 }
 
+#[derive(Serialize)]
 pub struct TorrentFileInfo<'input> {
-    pub length: u64,
     pub name: &'input str,
+    #[serde(rename = "piece length")]
     pub piece_length: u64,
+    #[serde(with = "serde_bytes")]
     pub pieces: &'input [u8],
+    pub length: u64,
+}
+
+impl<'input> TorrentFileInfo<'input> {
+    pub fn hash(&self) -> Result<String> {
+        let bencoded_info_dictionary =
+            serde_bencode::to_bytes(&self).context("fail to encode info dictionary")?;
+        let mut hasher = Sha1::new();
+        hasher.update(bencoded_info_dictionary);
+        let hash = hasher.finalize();
+        Ok(hex::encode(hash))
+    }
 }
 
 pub fn parse_torrent_file(contents: &[u8]) -> Result<TorrentFile> {
