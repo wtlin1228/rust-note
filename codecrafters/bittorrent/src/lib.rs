@@ -16,12 +16,13 @@ pub fn decode_bencoded_value(encoded_value: &[u8]) -> Result<serde_json::Value> 
     Ok(json)
 }
 
+#[derive(PartialEq, Debug)]
 pub struct TorrentFile<'input> {
     pub announce: &'input str,
     pub info: TorrentFileInfo<'input>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq, Debug)]
 pub struct TorrentFileInfo<'input> {
     pub name: &'input str,
     #[serde(rename = "piece length")]
