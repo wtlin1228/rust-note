@@ -14,6 +14,18 @@ pub fn decode_bencoded_value(encoded_value: &[u8]) -> Result<serde_json::Value> 
     Ok(json)
 }
 
+pub struct TorrentFile<'input> {
+    pub announce: &'input str,
+    pub info: TorrentFileInfo<'input>,
+}
+
+pub struct TorrentFileInfo<'input> {
+    pub length: u64,
+    pub name: &'input str,
+    pub piece_length: u64,
+    pub pieces: &'input [u8],
+}
+
 pub fn parse_torrent_file(contents: &[u8]) -> Result<TorrentFile> {
     let decoded_value = decode(contents).context("fail to decode file contents")?.1;
 
@@ -57,20 +69,8 @@ pub fn parse_torrent_file(contents: &[u8]) -> Result<TorrentFile> {
     })
 }
 
-pub struct TorrentFile<'input> {
-    pub announce: &'input str,
-    pub info: TorrentFileInfo<'input>,
-}
-
-pub struct TorrentFileInfo<'input> {
-    pub length: u64,
-    pub name: &'input str,
-    pub piece_length: u64,
-    pub pieces: &'input [u8],
-}
-
 #[derive(Debug)]
-pub enum Decoded<'input> {
+enum Decoded<'input> {
     String(&'input [u8]),
     Integer(i64),
     Array(Vec<Decoded<'input>>),
@@ -110,7 +110,7 @@ impl<'input> Decoded<'input> {
 
 type DecodeResult<'input> = Result<(&'input [u8], Decoded<'input>)>;
 
-pub fn decode(remaining: &[u8]) -> DecodeResult {
+fn decode(remaining: &[u8]) -> DecodeResult {
     Ok(match remaining[0] {
         ARRAY_START => decode_array(remaining)?,
         INTEGER_START => decode_integer(remaining)?,
