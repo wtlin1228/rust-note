@@ -1,5 +1,5 @@
 use bittorrent_starter_rust::{
-    decoder::decode_bencoded_value, torrent_file::parse_torrent_file, tracker::discover_peers,
+    decoder::decode_bencoded_value, torrent_file::parse_torrent_file, tracker::track,
 };
 use std::{env, fs};
 
@@ -21,7 +21,7 @@ fn main() {
             let torrent_file = parse_torrent_file(&contents[..]).unwrap();
             println!("Tracker URL: {}", torrent_file.announce);
             println!("Length: {}", torrent_file.info.length);
-            println!("Info Hash: {}", torrent_file.info.hash_info().unwrap());
+            println!("Info Hash: {}", torrent_file.info.hex_info().unwrap());
             println!("Piece Length: {}", torrent_file.info.piece_length);
             println!("Piece Hashes");
             for s in torrent_file.info.hex_pieces().unwrap() {
@@ -33,7 +33,11 @@ fn main() {
             let file_path = &args[2];
             let contents = fs::read(file_path).unwrap();
             let torrent_file = parse_torrent_file(&contents[..]).unwrap();
-            let peers = discover_peers(torrent_file).unwrap();
+            let track_result = track(torrent_file).unwrap();
+            println!("{:?}", track_result);
+            for peer in track_result.peers {
+                println!("{}", peer.to_string());
+            }
         }
         _ => println!("unknown command: {}", args[1]),
     }
