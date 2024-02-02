@@ -19,8 +19,12 @@ fn main() {
         let torrent_file = parse_torrent_file(&contents[..]).unwrap();
         println!("Tracker URL: {}", torrent_file.announce);
         println!("Length: {}", torrent_file.info.length);
-        let hash = torrent_file.info.hash().unwrap();
-        println!("Info Hash: {}", hash);
+        println!("Info Hash: {}", torrent_file.info.hash_info().unwrap());
+        println!("Piece Length: {}", torrent_file.info.piece_length);
+        println!("Piece Hashes");
+        for s in torrent_file.info.hex_pieces().unwrap() {
+            println!("{}", s);
+        }
     } else {
         println!("unknown command: {}", args[1])
     }

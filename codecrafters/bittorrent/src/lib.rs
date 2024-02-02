@@ -33,13 +33,21 @@ pub struct TorrentFileInfo<'input> {
 }
 
 impl<'input> TorrentFileInfo<'input> {
-    pub fn hash(&self) -> Result<String> {
+    pub fn hash_info(&self) -> Result<String> {
         let bencoded_info_dictionary =
             serde_bencode::to_bytes(&self).context("fail to encode info dictionary")?;
         let mut hasher = Sha1::new();
         hasher.update(bencoded_info_dictionary);
         let hash = hasher.finalize();
         Ok(hex::encode(hash))
+    }
+
+    pub fn hex_pieces(&self) -> Result<Vec<String>> {
+        Ok(self
+            .pieces
+            .chunks(20)
+            .map(|chunk| hex::encode(chunk))
+            .collect())
     }
 }
 
