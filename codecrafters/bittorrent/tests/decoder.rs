@@ -1,4 +1,4 @@
-use bittorrent_starter_rust::decode_bencoded_value;
+use bittorrent_starter_rust::decoder::decode_bencoded_value;
 use serde_json::json;
 
 macro_rules! test_decode {

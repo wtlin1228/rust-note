@@ -1,4 +1,4 @@
-use bittorrent_starter_rust::{parse_torrent_file, TorrentFile, TorrentFileInfo};
+use bittorrent_starter_rust::torrent_file::{parse_torrent_file, TorrentFile, TorrentFileInfo};
 
 #[test]
 fn parse_the_torrent_file() {
