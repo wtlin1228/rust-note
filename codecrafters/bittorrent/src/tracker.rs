@@ -54,7 +54,6 @@ pub fn get_request_url(torrent_file: &TorrentFile) -> Result<String> {
 
 // TODO: Make it private while still being available for testing
 pub fn parse_response(response: &[u8]) -> Result<TrackerResponse> {
-    println!("response: {:?}", response);
     let decoded_value = decode(response).context("fail to decode response")?.1;
 
     let mut complete: Option<i64> = None;
