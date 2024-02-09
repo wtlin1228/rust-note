@@ -1,78 +1,139 @@
-use anyhow::Context;
-use bittorrent_starter_rust::{
-    decoder::decode_bencoded_value, torrent_file::parse_torrent_file, tracker::track,
-};
-use bytes::{BufMut, BytesMut};
+use anyhow::{Context, Ok, Result};
+use bittorrent_starter_rust::decoder::decode_bencoded_value;
+use bittorrent_starter_rust::download::Download;
+use bittorrent_starter_rust::handshake::Handshake;
+use bittorrent_starter_rust::peer::Peer;
+use bittorrent_starter_rust::torrent_file::parse_torrent_file;
+use bittorrent_starter_rust::tracker::track;
+use clap::{Parser, Subcommand};
+use std::fs;
 use std::io::{Read, Write};
-use std::net::TcpStream;
-use std::{env, fs};
+use std::net::{SocketAddr, TcpStream};
+use std::path::PathBuf;
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let command = &args[1][..];
+#[derive(Parser, Debug)]
+struct Args {
+    #[command(subcommand)]
+    command: Command,
+}
+#[derive(Debug, Subcommand)]
+enum Command {
+    Decode {
+        encoded_value: String,
+    },
+    Info {
+        file_path: PathBuf,
+    },
+    Peers {
+        file_path: PathBuf,
+    },
+    Handshake {
+        file_path: PathBuf,
+        peer: SocketAddr,
+    },
+    #[command(name = "download_piece")]
+    DownloadPiece {
+        #[arg(short)]
+        output_file_path: PathBuf,
+        file_path: PathBuf,
+        piece_index: u32,
+    },
+    Download {
+        #[arg(short)]
+        output_file_path: PathBuf,
+        file_path: PathBuf,
+    },
+}
 
-    match command {
-        // Usage: your_bittorrent.sh decode "<encoded_value>"
-        "decode" => {
-            let encoded_value = &args[2];
-            let decoded_value = decode_bencoded_value(encoded_value.as_bytes()).unwrap();
+fn main() -> Result<()> {
+    match Args::parse().command {
+        Command::Decode { encoded_value } => {
+            let decoded_value =
+                decode_bencoded_value(encoded_value.as_bytes()).context("decode value")?;
             println!("{}", decoded_value.to_string());
         }
-        // Usage: your_bittorrent.sh info "<torrent_file_path>"
-        "info" => {
-            let file_path = &args[2];
-            let contents = fs::read(file_path).unwrap();
-            let torrent_file = parse_torrent_file(&contents[..]).unwrap();
+        Command::Info { file_path } => {
+            let contents = fs::read(file_path).context("open file")?;
+            let torrent_file = parse_torrent_file(&contents[..]).context("parse file")?;
             println!("Tracker URL: {}", torrent_file.announce);
             println!("Length: {}", torrent_file.info.length);
-            println!("Info Hash: {}", torrent_file.info.hex_info().unwrap());
+            println!(
+                "Info Hash: {}",
+                torrent_file.info.hex_info().context("hash info")?
+            );
             println!("Piece Length: {}", torrent_file.info.piece_length);
             println!("Piece Hashes");
-            for s in torrent_file.info.hex_pieces().unwrap() {
+            for s in torrent_file.info.hex_pieces().context("hex pieces")? {
                 println!("{}", s);
             }
         }
-        // Usage: your_bittorrent.sh peers "<torrent_file_path>"
-        "peers" => {
-            let file_path = &args[2];
-            let contents = fs::read(file_path).unwrap();
-            let torrent_file = parse_torrent_file(&contents[..]).unwrap();
-            let track_result = track(torrent_file).unwrap();
-            for peer in track_result.peers {
-                println!("{}", peer.to_string());
+        Command::Peers { file_path } => {
+            let contents = fs::read(file_path).context("open file")?;
+            let torrent_file = parse_torrent_file(&contents[..]).context("parse file")?;
+            let track_result = track(&torrent_file).context("track peers")?;
+            for peer_addr in track_result.peer_addr_list {
+                println!("{}", peer_addr.to_string());
             }
         }
-        // Usage: your_bittorrent.sh handshake "<torrent_file_path>" "<peer_ip>:<peer_port>"
-        "handshake" => {
-            let file_path = &args[2];
-            let peer = &args[3];
-            let contents = fs::read(file_path).unwrap();
-            let torrent_file = parse_torrent_file(&contents[..]).unwrap();
-
-            let mut buf = BytesMut::with_capacity(1 + 19 + 8 + 20 + 20);
-            buf.put_u8(19 as u8); // protocol length, 1 byte
-            buf.put_slice(b"BitTorrent protocol"); // protocol, 19 bytes
-            buf.put_bytes(0, 8); // reserved bytes, 8 bytes
-            buf.put_slice(&torrent_file.info.hash_info().unwrap()); // info hash, 20 bytes
-            buf.put_slice(b"00112233445566778899"); // peer id, 20 bytes
-
-            let mut stream = TcpStream::connect(peer)
-                .context("fail to connect to peer")
-                .unwrap();
-
+        Command::Handshake { file_path, peer } => {
+            let contents = fs::read(file_path).context("open file")?;
+            let torrent_file = parse_torrent_file(&contents[..]).context("parse file")?;
+            let info_hash = torrent_file.info.hash_info().context("hash info")?;
+            let mut stream = TcpStream::connect(peer).context("connect to peer")?;
+            let mut handshake = Handshake::new(info_hash);
+            let handshake_bytes = handshake.as_bytes_mut();
             stream
-                .write(&buf)
-                .context("fail to send handshake message")
-                .unwrap();
-
-            let mut buf = [0; 1 + 19 + 8 + 20 + 20];
+                .write(handshake_bytes)
+                .context("send handshake request")?;
             stream
-                .read(&mut buf)
-                .context("fail to read handshake response")
-                .unwrap();
-
-            println!("Peer ID: {}", hex::encode(&buf[buf.len() - 20..]));
+                .read_exact(handshake_bytes)
+                .context("read handshake response")?;
+            assert_eq!(handshake.protocol_length, 19);
+            assert_eq!(&handshake.protocol, b"BitTorrent protocol");
+            assert_eq!(handshake.info_hash, info_hash);
+            println!("Peer ID: {}", hex::encode(&handshake.peer_id));
         }
-        _ => println!("unknown command: {}", args[1]),
+        Command::DownloadPiece {
+            output_file_path,
+            file_path,
+            piece_index,
+        } => {
+            // Read the torrent file to get the tracker URL
+            let contents = fs::read(file_path).context("open file")?;
+            let torrent_file = parse_torrent_file(&contents[..]).context("parse file")?;
+
+            // Perform the tracker GET request to get a list of peers
+            let track_result = track(&torrent_file).context("track peers")?;
+            let first_peer_addr = track_result
+                .peer_addr_list
+                .first()
+                .context("get first peer")?
+                .to_string();
+
+            // Download the piece from the first peer
+            let mut peer = Peer::new(first_peer_addr, torrent_file).context("create peer")?;
+            let piece = peer
+                .download_a_piece(piece_index)
+                .context("download a piece")?;
+
+            // Write downloaded piece to output file
+            fs::write(&output_file_path, piece).with_context(|| {
+                format!("write the downloaded piece to file {:?}", output_file_path)
+            })?;
+
+            println!(
+                "Piece {} downloaded to {}.",
+                piece_index,
+                output_file_path.display()
+            );
+        }
+        Command::Download {
+            output_file_path,
+            file_path,
+        } => {
+            Download::download_file(&file_path, &output_file_path)
+                .with_context(|| format!("download {:?} to {:?}", file_path, output_file_path))?;
+        }
     }
+    Ok(())
 }

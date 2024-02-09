@@ -20,11 +20,11 @@ fn parse_the_torrent_file() {
         ])
         .unwrap(),
         TorrentFile {
-            announce: "http://bittorrent-test-tracker.codecrafters.io/announce",
+            announce: "http://bittorrent-test-tracker.codecrafters.io/announce".to_string(),
             info: TorrentFileInfo {
-                name: "sample.txt",
+                name: "sample.txt".to_string(),
                 piece_length: 32768,
-                pieces: &[
+                pieces: vec![
                     232, 118, 246, 122, 42, 136, 134, 232, 243, 107, 19, 103, 38, 195, 15, 162,
                     151, 3, 2, 45, 110, 34, 117, 230, 4, 160, 118, 102, 86, 115, 110, 129, 255, 16,
                     181, 82, 4, 173, 141, 53, 240, 13, 147, 122, 2, 19, 223, 25, 130, 188, 141, 9,
@@ -40,9 +40,9 @@ fn parse_the_torrent_file() {
 fn hash_the_torrent_file_info() {
     assert_eq!(
         TorrentFileInfo {
-            name: "sample.txt",
+            name: "sample.txt".to_string(),
             piece_length: 32768,
-            pieces: &[
+            pieces: vec![
                 232, 118, 246, 122, 42, 136, 134, 232, 243, 107, 19, 103, 38, 195, 15, 162, 151, 3,
                 2, 45, 110, 34, 117, 230, 4, 160, 118, 102, 86, 115, 110, 129, 255, 16, 181, 82, 4,
                 173, 141, 53, 240, 13, 147, 122, 2, 19, 223, 25, 130, 188, 141, 9, 114, 39, 173,
@@ -63,9 +63,9 @@ fn hash_the_torrent_file_info() {
 fn hex_the_torrent_file_info() {
     assert_eq!(
         TorrentFileInfo {
-            name: "sample.txt",
+            name: "sample.txt".to_string(),
             piece_length: 32768,
-            pieces: &[
+            pieces: vec![
                 232, 118, 246, 122, 42, 136, 134, 232, 243, 107, 19, 103, 38, 195, 15, 162, 151, 3,
                 2, 45, 110, 34, 117, 230, 4, 160, 118, 102, 86, 115, 110, 129, 255, 16, 181, 82, 4,
                 173, 141, 53, 240, 13, 147, 122, 2, 19, 223, 25, 130, 188, 141, 9, 114, 39, 173,
@@ -83,9 +83,9 @@ fn hex_the_torrent_file_info() {
 fn url_encode_the_torrent_file_info() {
     assert_eq!(
         TorrentFileInfo {
-            name: "sample.txt",
+            name: "sample.txt".to_string(),
             piece_length: 32768,
-            pieces: &[
+            pieces: vec![
                 232, 118, 246, 122, 42, 136, 134, 232, 243, 107, 19, 103, 38, 195, 15, 162, 151, 3,
                 2, 45, 110, 34, 117, 230, 4, 160, 118, 102, 86, 115, 110, 129, 255, 16, 181, 82, 4,
                 173, 141, 53, 240, 13, 147, 122, 2, 19, 223, 25, 130, 188, 141, 9, 114, 39, 173,
@@ -103,9 +103,9 @@ fn url_encode_the_torrent_file_info() {
 fn hax_the_torrent_file_pieces() {
     assert_eq!(
         TorrentFileInfo {
-            name: "sample.txt",
+            name: "sample.txt".to_string(),
             piece_length: 32768,
-            pieces: &[
+            pieces: vec![
                 232, 118, 246, 122, 42, 136, 134, 232, 243, 107, 19, 103, 38, 195, 15, 162, 151, 3,
                 2, 45, 110, 34, 117, 230, 4, 160, 118, 102, 86, 115, 110, 129, 255, 16, 181, 82, 4,
                 173, 141, 53, 240, 13, 147, 122, 2, 19, 223, 25, 130, 188, 141, 9, 114, 39, 173,

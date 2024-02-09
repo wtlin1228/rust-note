@@ -11,27 +11,27 @@ pub struct TrackerResponse {
     pub min_interval: i64,
     pub incomplete: i64,
     pub interval: i64,
-    pub peers: Vec<Peer>,
+    pub peer_addr_list: Vec<PeerAddr>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Peer {
+pub struct PeerAddr {
     pub ip: Ipv4Addr,
     pub port: u16,
 }
 
-impl Peer {
+impl PeerAddr {
     pub fn to_string(&self) -> String {
         format!("{}:{}", self.ip, self.port)
     }
 }
 
-pub fn track(torrent_file: TorrentFile) -> Result<TrackerResponse> {
-    let url = get_request_url(&torrent_file).context("fail to get url")?;
+pub fn track(torrent_file: &TorrentFile) -> Result<TrackerResponse> {
+    let url = get_request_url(&torrent_file).context("get url")?;
     let response_in_bytes = &reqwest::blocking::get(url)
-        .context("fail to request the url")?
+        .context("request the url")?
         .bytes()
-        .context("fail to read request as bytes")?[..];
+        .context("read request as bytes")?[..];
     parse_response(response_in_bytes)
 }
 
@@ -41,7 +41,7 @@ pub fn get_request_url(torrent_file: &TorrentFile) -> Result<String> {
     let url_encoded_info_hash: String = torrent_file
         .info
         .url_encoded_hash_info()
-        .context("fail to get url encoded hash info")?;
+        .context("get url encoded hash info")?;
     url.push_str(&format!("?info_hash={}", url_encoded_info_hash));
     url.push_str("&peer_id=00112233445566778899");
     url.push_str("&port=6881");
@@ -54,13 +54,13 @@ pub fn get_request_url(torrent_file: &TorrentFile) -> Result<String> {
 
 // TODO: Make it private while still being available for testing
 pub fn parse_response(response: &[u8]) -> Result<TrackerResponse> {
-    let decoded_value = decode(response).context("fail to decode response")?.1;
+    let decoded_value = decode(response).context("decode response")?.1;
 
     let mut complete: Option<i64> = None;
     let mut min_interval: Option<i64> = None;
     let mut incomplete: Option<i64> = None;
     let mut interval: Option<i64> = None;
-    let mut peers: Option<Vec<Peer>> = None;
+    let mut peers: Option<Vec<PeerAddr>> = None;
 
     if let Decoded::Dictionary(dict) = decoded_value {
         if let Decoded::Integer(n) = dict.get("complete").context("should contain complete")? {
@@ -82,9 +82,9 @@ pub fn parse_response(response: &[u8]) -> Result<TrackerResponse> {
             interval = Some(n.to_owned());
         };
         if let Decoded::String(info) = dict.get("peers").context("should contain peers")? {
-            let mut vec: Vec<Peer> = vec![];
+            let mut vec: Vec<PeerAddr> = vec![];
             for chunk in info.chunks(6) {
-                vec.push(Peer {
+                vec.push(PeerAddr {
                     ip: Ipv4Addr::new(chunk[0], chunk[1], chunk[2], chunk[3]),
                     port: ((chunk[4] as u16) << 8) | chunk[5] as u16,
                 })
@@ -94,10 +94,10 @@ pub fn parse_response(response: &[u8]) -> Result<TrackerResponse> {
     }
 
     Ok(TrackerResponse {
-        complete: complete.context("fail to get complete")?,
-        min_interval: min_interval.context("fail to get min interval")?,
-        incomplete: incomplete.context("fail to get incomplete")?,
-        interval: interval.context("fail to get interval")?,
-        peers: peers.context("fail to get peers")?,
+        complete: complete.context("get complete")?,
+        min_interval: min_interval.context("get min interval")?,
+        incomplete: incomplete.context("get incomplete")?,
+        interval: interval.context("get interval")?,
+        peer_addr_list: peers.context("get peers")?,
     })
 }

@@ -28,16 +28,13 @@ impl<'input> Decoded<'input> {
     fn into_json(&self) -> Result<serde_json::Value> {
         return Ok(match self {
             Decoded::String(bytes) => {
-                json!(std::str::from_utf8(&bytes)
-                    .context("fail to convert bytes into json string")?)
+                json!(std::str::from_utf8(&bytes).context("convert bytes into json string")?)
             }
             Decoded::Integer(n) => json!(n),
             Decoded::Array(arr) => {
                 let collected: Result<Vec<serde_json::Value>> =
                     arr.into_iter().map(|item| item.into_json()).collect();
-                serde_json::Value::Array(
-                    collected.context("fail to collect items into json array")?,
-                )
+                serde_json::Value::Array(collected.context("collect items into json array")?)
             }
             Decoded::Dictionary(dict) => {
                 let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
@@ -46,7 +43,7 @@ impl<'input> Decoded<'input> {
                         key.clone(),
                         value
                             .into_json()
-                            .context("fail to collect values into json object")?,
+                            .context("collect values into json object")?,
                     );
                 }
                 serde_json::Value::Object(map)
@@ -74,8 +71,7 @@ fn decode_array<'input>(remaining: &'input [u8]) -> DecodeResult {
         if remaining[0] == ENDING {
             return Ok((&remaining[1..], Decoded::Array(items)));
         }
-        let (next_remaining, item) =
-            decode(remaining).context("Decoding Array: fail to parse item")?;
+        let (next_remaining, item) = decode(remaining).context("Decoding Array: parse item")?;
         items.push(item);
         remaining = next_remaining;
     }
@@ -92,7 +88,7 @@ fn decode_integer(remaining: &[u8]) -> DecodeResult {
     let integer = std::str::from_utf8(&remaining[1..end_index])
         .context("Decoding Integer: size isn't in valid UTF-8 format")?
         .parse::<i64>()
-        .context("Decoding Integer: fail to parse size")?;
+        .context("Decoding Integer: parse size")?;
     Ok((&remaining[end_index + 1..], Decoded::Integer(integer)))
 }
 
@@ -107,10 +103,10 @@ fn decode_dictionary<'input>(remaining: &'input [u8]) -> DecodeResult {
             return Ok((&remaining[1..], Decoded::Dictionary(map)));
         }
         let (next_remaining, key) =
-            decode_string(remaining).context("Decoding Dictionary: fail to get key")?;
+            decode_string(remaining).context("Decoding Dictionary: get key")?;
         remaining = next_remaining;
         let (next_remaining, value) =
-            decode(remaining).context("Decoding Dictionary: fail to parse value")?;
+            decode(remaining).context("Decoding Dictionary: parse value")?;
         remaining = next_remaining;
         if let Decoded::String(key) = key {
             let key = std::str::from_utf8(key)
@@ -132,7 +128,7 @@ fn decode_string(remaining: &[u8]) -> DecodeResult {
     let string_length = std::str::from_utf8(&remaining[..colon_index])
         .context("Decoding String: size isn't in valid UTF-8 format")?
         .parse::<i64>()
-        .context("Decoding String: fail to parse size")?;
+        .context("Decoding String: parse size")?;
     let end_index = colon_index + 1 + string_length as usize;
     Ok((
         &remaining[end_index..],

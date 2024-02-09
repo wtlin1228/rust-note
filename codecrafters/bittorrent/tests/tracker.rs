@@ -2,18 +2,18 @@ use std::net::Ipv4Addr;
 
 use bittorrent_starter_rust::{
     torrent_file::{TorrentFile, TorrentFileInfo},
-    tracker::{get_request_url, parse_response, Peer, TrackerResponse},
+    tracker::{get_request_url, parse_response, PeerAddr, TrackerResponse},
 };
 
 #[test]
 fn create_url_from_torrent_file() {
     assert_eq!(
         get_request_url(&TorrentFile {
-            announce: "http://bittorrent-test-tracker.codecrafters.io/announce",
+            announce: "http://bittorrent-test-tracker.codecrafters.io/announce".to_string(),
             info: TorrentFileInfo {
-                name: "sample.txt",
+                name: "sample.txt".to_string(),
                 piece_length: 32768,
-                pieces: &[
+                pieces:  vec![
                     232, 118, 246, 122, 42, 136, 134, 232, 243, 107, 19, 103, 38, 195, 15, 162,
                     151, 3, 2, 45, 110, 34, 117, 230, 4, 160, 118, 102, 86, 115, 110, 129, 255, 16,
                     181, 82, 4, 173, 141, 53, 240, 13, 147, 122, 2, 19, 223, 25, 130, 188, 141, 9,
@@ -43,16 +43,16 @@ fn create_track_response() {
             min_interval: 60,
             incomplete: 1,
             interval: 60,
-            peers: vec![
-                Peer {
+            peer_addr_list: vec![
+                PeerAddr {
                     ip: Ipv4Addr::new(178, 62, 82, 89),
                     port: 51470
                 },
-                Peer {
+                PeerAddr {
                     ip: Ipv4Addr::new(165, 232, 33, 77),
                     port: 51467
                 },
-                Peer {
+                PeerAddr {
                     ip: Ipv4Addr::new(178, 62, 85, 20),
                     port: 51489
                 }
